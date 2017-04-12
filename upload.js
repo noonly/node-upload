@@ -14,8 +14,6 @@ http.createServer(function (req, res) {
     } else if (req.method === 'POST') {
         var busboy = new Busboy({headers: req.headers});
         var f = uuidV4();
-        //var tmpfile;
-        //var filesha1;
         var dataarray = [];
         var finisharray = [];
         var count = 0;
@@ -23,6 +21,7 @@ http.createServer(function (req, res) {
         busboy.on('file', function (fieldname, file, filename, encoding, mimetype) { /*if (!fieldname){return} console.log("field1:"+fieldname);*/
             if(filename){
                 count++;
+                //valid file count
             }
             var saveTo = path.join(dir, path.basename(fieldname + "_" + f));
 
@@ -30,11 +29,8 @@ http.createServer(function (req, res) {
             dataarray.push(fieldname + "_" + f);
         });
         busboy.on('finish', function () { /*console.log(filesha1+"--"+tmpfile);*/
-            //for (var i = 0; i < dataarray.length; i++) {
             dataarray.forEach(function(file){
-                /*fs.unlink(dir + "" + dataarray[i], function (err) {
-                    console.log("delete temp file success")
-                })*/
+
                 var tmpfile = dir + "" + file;
                 try {
                     sha1File(tmpfile,function (error, filesha1) {
@@ -45,9 +41,9 @@ http.createServer(function (req, res) {
                                 fs.unlink(tmpfile, function (err) {
                                     console.log("success2");
                                 })
-                                res.writeHead(200);
+                                /*res.writeHead(200);
                                 res.end("{'msg':'0','info':'unlink'}");
-                                return;
+                                return;*/
                             } else {
                                 var mediatype = metadata.streams[0].codec_name;
                                 /*console.log(metadata.streams[0]);*/
@@ -154,5 +150,5 @@ http.createServer(function (req, res) {
     res.writeHead(404);
     res.end();
 }).listen(3000, function () {
-    console.log('Listening for requests');
+    console.log('Listening for requests, port:3000');
 });
