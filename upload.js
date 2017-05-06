@@ -70,7 +70,7 @@ http.createServer(function (req, res) {
                                         console.log("success")
                                     })
                                     res.writeHead(200);
-                                    res.end("{'msg':'0','info':'undefined'}");
+                                    res.end("{'msg':'0','info':'file type undefined'}");
                                     return;
                                 }
 
@@ -129,7 +129,7 @@ http.createServer(function (req, res) {
                                 finisharray[j] = newfile;
                                 if(count == 0) {
                                     res.writeHead(200, {'Connection': 'close'});
-                                    res.end("{'msg':'1','name':'" + finisharray + "'}");
+                                    res.end("{'msg':'1','name':'" + finisharray + "','count':"+finisharray.length+"}");
                                 }
 
                             }
