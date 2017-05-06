@@ -13,7 +13,6 @@ http.createServer(function (req, res) {
         res.end();
     } else if (req.method === 'POST') {
         var busboy = new Busboy({headers: req.headers});
-        var f = uuidV4();
         var dataarray = [];
         var finisharray = [];
         var count = 0;
@@ -23,10 +22,12 @@ http.createServer(function (req, res) {
                 count++;
                 //valid file count
             }
-            var saveTo = path.join(dir, path.basename(fieldname + "_" + f));
+            var f = uuidV4();
+
+            var saveTo = path.join(dir, path.basename(f));
 
             file.pipe(fs.createWriteStream(saveTo));
-            dataarray.push(fieldname + "_" + f);
+            dataarray.push(f);
         });
         busboy.on('finish', function () { /*console.log(filesha1+"--"+tmpfile);*/
             dataarray.forEach(function(file){
@@ -42,11 +43,19 @@ http.createServer(function (req, res) {
                                     console.log("success2");
                                 })
                                 /*res.writeHead(200);
-                                res.end("{'msg':'0','info':'unlink'}");
+                                res.end('{"msg":"0","info":"unlink"}');
                                 return;*/
                             } else {
-                                var mediatype = metadata.streams[0].codec_name;
+                                var mediainfo;
+                                var mediatype;// = metadata.streams[0].codec_name;
+                                if (metadata.streams[0].codec_type == "video"){
+                                    mediainfo = metadata.streams[0];
+                                }else{
+                                    mediainfo = metadata.streams[1];
+                                }
+                                mediatype = mediainfo.codec_name;
                                 /*console.log(metadata.streams[0]);*/
+                                console.dir(mediatype);
                                 var transfer = false;
                                 if (mediatype === 'tscc') {
                                     suffix = 'avi';
@@ -68,14 +77,14 @@ http.createServer(function (req, res) {
                                 if (suffix == undefined) {
                                     fs.unlink(tmpfile, function (err) {
                                         console.log("success")
-                                    })
+                                    });
                                     res.writeHead(200);
-                                    res.end("{'msg':'0','info':'file type undefined'}");
+                                    res.end('{"msg":"0","info":"file type undefined"}');
                                     return;
                                 }
 
-                                var height = metadata.streams[0].coded_height;
-                                var width = metadata.streams[0].coded_width;
+                                var height = mediainfo.coded_height;
+                                var width = mediainfo.coded_width;
                                 //var bit_rate = metadata.streams[0].bit_rate;
                                 //var r_frame_rate = metadata.streams[0]r_frame_rate;
                                 var ratio = height / width;
@@ -86,7 +95,7 @@ http.createServer(function (req, res) {
 
                                 fs.rename(tmpfile, dir + "" + newfile, function () {
                                 });
-                                if (typeof(metadata.streams[0].duration) == "number") {
+                                if (typeof(mediainfo.duration) == "number") {
 
                                     if (transfer) {
 
@@ -101,7 +110,7 @@ http.createServer(function (req, res) {
 
                                     }
 
-                                    //console.log(typeof(metadata.streams[0].duration));
+                                    //console.log(typeof(mediainfo.duration));
                                     try {
                                         ffmpeg(dir + "/" + newfile).screenshots({
                                             timestamps: ['0'],
@@ -112,7 +121,7 @@ http.createServer(function (req, res) {
                                         });
                                     } catch (e) {
                                         res.writeHead(200, {'Connection': 'close'});
-                                        res.end("{'msg':'0','info':'screenshots'}");
+                                        res.end('{"msg":"0","info":"screenshots"}');
                                         console.log(newfile)
                                     }
                                 }
@@ -129,7 +138,7 @@ http.createServer(function (req, res) {
                                 finisharray[j] = newfile;
                                 if(count == 0) {
                                     res.writeHead(200, {'Connection': 'close'});
-                                    res.end("{'msg':'1','name':'" + finisharray + "','count':"+finisharray.length+"}");
+                                    res.end("{\"msg\":\"1\",\"name\":\"" + finisharray + "\",\"count\":"+finisharray.length+"}");
                                 }
 
                             }
